@@ -1,8 +1,15 @@
 /******************************************************************************
 	Create Database
 *******************************************************************************/
+
 DROP DATABASE IF EXISTS `MineField`;
+DROP USER IF EXISTS 'minefield'@'localhost';
+
 CREATE DATABASE `MineField`;
+CREATE USER 'minefield'@'localhost' IDENTIFIED BY 'password';
+
+GRANT ALL ON MineField.* TO 'minefield'@'localhost';
+
 USE `MineField`;
 
 /******************************************************************************
@@ -13,7 +20,7 @@ CREATE TABLE `Mine`
 	`MineID`	INT NOT NULL AUTO_INCREMENT,
 	`ChunkID`	INT NOT NULL,
 	`x`			TINYINT NOT NULL,
-	`y`			INT NOT NULL,
+	`y`			TINYINT NOT NULL,
 	CONSTRAINT `PK_Mine` PRIMARY KEY (`MineID`)
 );
 
@@ -30,6 +37,7 @@ CREATE TABLE `Board`
 (
 	`BoardID`	INT NOT NULL AUTO_INCREMENT,
 	`ChunkSize`	INT NOT NULL,
+	`ChunkMines`	INT NOT NULL,
 	CONSTRAINT `PK_Board` PRIMARY KEY (`BoardID`)
 );
 

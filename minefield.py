@@ -1,40 +1,45 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
 
+import sqlobject as SO
 import random
+__connection__ = SO.connectionForURI("mysql://minefield:password@localhost/MineField")
+#__connection__.debug = True
 
-def get_empty_square():
-	square = {
-		'Mine' : False,
-		'Status' : 'Hidden'
-	}
-	return square
 
-def get_empty_chunk(size):
-	chunk = []
-	for x in range(size):
-		chunk.append([])
-		for y in range(size):
-			chunk[x].append( get_empty_square() )
-	return chunk
+class Mine(SO.SQLObject):
+	class sqlmeta:
+		style = SO.MixedCaseStyle( longID=True )
+	x = SO.IntCol()
+	y = SO.IntCol()
+	Chunk = SO.ForeignKey('Chunk')
 
-def generate_mines(chunk, N):
-	while N > 0:
-		x = random.randrange(0, len(chunk[0]) )
-		y = random.randrange(0, len(chunk[0]) )
-		if chunk[x][y]['Mine'] == False:
-			chunk[x][y]['Mine'] = True
-			N -= 1
+class Chunk(SO.SQLObject):
+	class sqlmeta:
+		style = SO.MixedCaseStyle( longID=True )
+	i = SO.IntCol()
+	j = SO.IntCol()
+	Board = SO.ForeignKey('Board')
 
-def print_chunk(chunk):
-	for x in range( len(chunk[0]) ):
-		for y in range( len(chunk[0]) ):
-			if chunk[x][y]['Mine'] == True:
-				print("X", end="")
-			else:
-				print("0", end="")
-		print()
+	def generate_mines(self):
+		board = Board.select( Board.q.id==self.Board ).getOne()
+		remaining_mines = board.ChunkMines 
+		while remaining_mines>0:
+			x = random.randrange( board.ChunkSize )
+			y = random.randrange( board.ChunkSize )
+			mine = Mine.selectBy( x=x, y=y, Chunk=self.id )
+			if mine.count() == 0:
+				Mine( x=x, y=y, Chunk=self.id)
+				remaining_mines -= 1
 
-chunk=get_empty_chunk(3)
-generate_mines(chunk,3)
-print_chunk(chunk)
+class Board(SO.SQLObject):
+	class sqlmeta:
+		style = SO.MixedCaseStyle( longID=True )
+	ChunkSize = SO.IntCol()
+	ChunkMines = SO.IntCol()
 
+board = Board(ChunkSize=8, ChunkMines=5 )
+chunk = Chunk( i=0, j=0, Board=board.id )
+chunk.generate_mines()
+for mine in Mine.select():
+	print(mine)
