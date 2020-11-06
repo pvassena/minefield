@@ -3,48 +3,43 @@
 
 import sqlobject as SO
 import random
+
 __connection__ = SO.connectionForURI("mysql://minefield:password@localhost/MineField")
 #__connection__.debug = True
 
 
 class Mine(SO.SQLObject):
-	class sqlmeta:
-		style = SO.MixedCaseStyle( longID=True )
 	x = SO.IntCol()
 	y = SO.IntCol()
-	Chunk = SO.ForeignKey('Chunk')
+	chunk = SO.ForeignKey('Chunk')
 
 class Chunk(SO.SQLObject):
-	class sqlmeta:
-		style = SO.MixedCaseStyle( longID=True )
 	i = SO.IntCol()
 	j = SO.IntCol()
-	Board = SO.ForeignKey('Board')
+	board = SO.ForeignKey('Board')
+	mines = SO.MultipleJoin('Mine')
 
 	def generate_mines(self):
-		board = Board.select( Board.q.id==self.Board ).getOne()
-		
 		#generate square list
 		squares = []
-		for x in range( board.ChunkSize ):
-			for y in range( board.ChunkSize ):
+		for x in range( board.chunk_size ):
+			for y in range( board.chunk_size ):
 				squares.append( (x,y) )
 		
 		#get list of random squares
-		mines = random.sample( squares, board.ChunkMines )
+		mines = random.sample( squares, board.chunk_mines )
 		
 		#create mines in the squares
 		for mine in mines:
-			Mine( x=mine[0], y=mine[1], Chunk=self.id )
+			Mine( x=mine[0], y=mine[1], chunk=self )
 
 class Board(SO.SQLObject):
-	class sqlmeta:
-		style = SO.MixedCaseStyle( longID=True )
-	ChunkSize = SO.IntCol()
-	ChunkMines = SO.IntCol()
+	chunk_size = SO.IntCol()
+	chunk_mines = SO.IntCol()
+	chunks = SO.MultipleJoin('Chunk')
 
-board = Board(ChunkSize=8, ChunkMines=5 )
-chunk = Chunk( i=0, j=0, Board=board.id )
-chunk.generate_mines()
-for mine in Mine.select():
-	print(mine)
+board = Board( chunk_size=8, chunk_mines=5 )
+chunk = Chunk( i=0, j=0, board=board )
+#chunk.generate_mines()
+#for mine in Mine.select():
+#	print(mine)

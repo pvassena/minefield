@@ -15,65 +15,65 @@ USE `MineField`;
 /******************************************************************************
 	Create Tables
 *******************************************************************************/
-CREATE TABLE `Mine`
+CREATE TABLE `mine`
 (
-	`MineID`	INT NOT NULL AUTO_INCREMENT,
-	`ChunkID`	INT NOT NULL,
-	`x`			TINYINT NOT NULL,
-	`y`			TINYINT NOT NULL,
-	CONSTRAINT `PK_Mine` PRIMARY KEY (`MineID`)
-);
-
-CREATE TABLE `Chunk`
-(
-	`ChunkID`	INT NOT NULL AUTO_INCREMENT,
-	`BoardID`	INT NOT NULL,
-	`i`			INT NOT NULL,
-	`j`			INT NOT NULL,
-	CONSTRAINT `PK_Chunk` PRIMARY KEY (`ChunkID`)
-);
-
-CREATE TABLE `Board`
-(
-	`BoardID`	INT NOT NULL AUTO_INCREMENT,
-	`ChunkSize`	INT NOT NULL,
-	`ChunkMines`	INT NOT NULL,
-	CONSTRAINT `PK_Board` PRIMARY KEY (`BoardID`)
-);
-
-CREATE TABLE `Action`
-(
-	`ActionID`	INT NOT NULL AUTO_INCREMENT,
-	`ChunkID`	INT NOT NULL,
+	`id`	INT NOT NULL AUTO_INCREMENT,
+	`chunk_id`	INT NOT NULL,
 	`x`			INT NOT NULL,
 	`y`			INT NOT NULL,
-	`Action`	ENUM ('Dig','SwitchFlag') NOT NULL,
-	CONSTRAINT `PK_Action` PRIMARY KEY (`ActionID`)
+	CONSTRAINT `PK_Mine` PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `chunk`
+(
+	`id`	INT NOT NULL AUTO_INCREMENT,
+	`board_id`	INT NOT NULL,
+	`i`			INT NOT NULL,
+	`j`			INT NOT NULL,
+	CONSTRAINT `PK_Chunk` PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `board`
+(
+	`id`	INT NOT NULL AUTO_INCREMENT,
+	`chunk_size`	INT NOT NULL,
+	`chunk_mines`	INT NOT NULL,
+	CONSTRAINT `PK_Board` PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `action`
+(
+	`id`	INT NOT NULL AUTO_INCREMENT,
+	`chunk_id`	INT NOT NULL,
+	`x`			INT NOT NULL,
+	`y`			INT NOT NULL,
+	`action`	ENUM ('DIG','SWITCH_FLAG') NOT NULL,
+	CONSTRAINT `PK_Action` PRIMARY KEY (`id`)
 );
 
 /******************************************************************************
 	Create Foreign Keys
 *******************************************************************************/
-ALTER TABLE `Mine`
+ALTER TABLE `mine`
 	ADD CONSTRAINT `Mine_ChunkID`
-	FOREIGN KEY (`ChunkID`) References `Chunk`(`ChunkID`)
+	FOREIGN KEY (`chunk_id`) References `chunk`(`id`)
 	ON UPDATE NO ACTION
 	ON DELETE NO ACTION;
 	
-ALTER TABLE `Chunk`
+ALTER TABLE `chunk`
 	ADD CONSTRAINT `Chunk_BoardID`
-	FOREIGN KEY (`BoardID`) References `Board`(`BoardID`)
+	FOREIGN KEY (`board_id`) References `board`(`id`)
 	ON UPDATE NO ACTION
 	ON DELETE NO ACTION;
 	
-ALTER TABLE `Action`
+ALTER TABLE `action`
 	ADD CONSTRAINT `Action_ChunkID`
-	FOREIGN KEY (`ChunkID`) References `Chunk`(`ChunkID`)
+	FOREIGN KEY (`chunk_id`) References `chunk`(`id`)
 	ON UPDATE NO ACTION
 	ON DELETE NO ACTION;
 	
 /******************************************************************************
 	Create Foreign Index
 *******************************************************************************/
-CREATE INDEX `IFK_Mine_ChunkID`  ON `Mine` (`ChunkID`);
-CREATE INDEX `IFK_Chunk_BoardID` ON `Chunk`(`BoardID`);
+CREATE INDEX `IFK_Mine_ChunkID`  ON `mine` (`chunk_id`);
+CREATE INDEX `IFK_Chunk_BoardID` ON `chunk`(`board_id`);
