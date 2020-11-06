@@ -23,14 +23,19 @@ class Chunk(SO.SQLObject):
 
 	def generate_mines(self):
 		board = Board.select( Board.q.id==self.Board ).getOne()
-		remaining_mines = board.ChunkMines 
-		while remaining_mines>0:
-			x = random.randrange( board.ChunkSize )
-			y = random.randrange( board.ChunkSize )
-			mine = Mine.selectBy( x=x, y=y, Chunk=self.id )
-			if mine.count() == 0:
-				Mine( x=x, y=y, Chunk=self.id)
-				remaining_mines -= 1
+		
+		#generate square list
+		squares = []
+		for x in range( board.ChunkSize ):
+			for y in range( board.ChunkSize ):
+				squares.append( (x,y) )
+		
+		#get list of random squares
+		mines = random.sample( squares, board.ChunkMines )
+		
+		#create mines in the squares
+		for mine in mines:
+			Mine( x=mine[0], y=mine[1], Chunk=self.id )
 
 class Board(SO.SQLObject):
 	class sqlmeta:
