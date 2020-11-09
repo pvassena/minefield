@@ -18,18 +18,18 @@ USE `MineField`;
 CREATE TABLE `mine`
 (
 	`id`	INT NOT NULL AUTO_INCREMENT,
-	`chunk_id`	INT NOT NULL,
 	`x`			INT NOT NULL,
 	`y`			INT NOT NULL,
+	`chunk_id`	INT NOT NULL,
 	CONSTRAINT `PK_Mine` PRIMARY KEY (`id`)
 );
 
 CREATE TABLE `chunk`
 (
 	`id`	INT NOT NULL AUTO_INCREMENT,
-	`board_id`	INT NOT NULL,
 	`i`			INT NOT NULL,
 	`j`			INT NOT NULL,
+	`board_id`	INT NOT NULL,
 	CONSTRAINT `PK_Chunk` PRIMARY KEY (`id`)
 );
 
