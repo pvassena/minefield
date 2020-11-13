@@ -50,51 +50,50 @@ class Chunk(SO.SQLObject):
 						display[y][x]['count'] += 1
 		#check left mines
 		chunk=self.board.get_chunk( i=self.i-1, k=self.k)
-		mines = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == size-1 )
+		mines = Mine.selectBy( chunk = chunk, x = size-1 )
 		for mine in mines:
 			for y in range(mine.y-1 ,mine.y+2):
 				if y>=0 and y<size:
 					display[y][0]['count'] += 1
 		#check right mines
 		chunk=self.board.get_chunk( i=self.i+1, k=self.k)
-		mines = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == 0 )
+		mines = Mine.selectBy( chunk = chunk, x = 0 )
 		for mine in mines:
 			for y in range(mine.y-1 ,mine.y+2):
 				if y>=0 and y<size:
 					display[y][size-1]['count'] += 1
 		#check up mines
 		chunk=self.board.get_chunk( i=self.i, k=self.k-1)
-		mines = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.y == size-1 )
+		mines = Mine.selectBy( chunk = chunk, y = size-1 )
 		for mine in chunk.mines:
 			for x in range(mine.x-1 ,mine.x+2):
 				if x>=0 and x<size:
 					display[0][x]['count'] += 1
 		#check down mines
 		chunk=self.board.get_chunk( i=self.i, k=self.k+1)
-		mines = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.y == 0 )
+		mines = Mine.selectBy( chunk = chunk, y = 0 )
 		for mine in chunk.mines:
 			for x in range(mine.x-1 ,mine.x+2):
 				if x>=0 and x<size:
 					display[size-1][x]['count'] += 1
 		#check left_up mines
 		chunk=self.board.get_chunk( i=self.i-1, k=self.k-1 )
-		mine = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == size-1, Mine.q.y == size-1 )
-		print(mine)
+		mine = Mine.selectBy( chunk = chunk, x = size-1, y = size-1 )
 		if mine.count():
 			display[0][0]['count'] += 1
 		#check right_up mines
 		chunk=self.board.get_chunk( i=self.i+1, k=self.k-1 )
-		mine = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == 0, Mine.q.y == size-1 )
+		mine = Mine.selectBy( chunk = chunk, x = 0, y = size-1 )
 		if mine.count():
 			display[0][size-1]['count'] += 1
 		#check left_down mines
 		chunk=self.board.get_chunk( i=self.i-1, k=self.k+1 )
-		mine = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == size-1, Mine.q.y == 0 )
+		mine = Mine.selectBy( chunk = chunk, x = size-1, y = 0 )
 		if mine.count():
 			display[0][size-1]['count'] += 1
 		#check right_down mines
 		chunk=self.board.get_chunk( i=self.i+1, k=self.k+1 )
-		mine = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == 0, Mine.q.y == 0 )
+		mine = Mine.selectBy( chunk = chunk, x = 0, y = 0 )
 		if mine.count():
 			display[size-1][size-1]['count'] += 1
 		return display
