@@ -28,7 +28,7 @@ CREATE TABLE `chunk`
 (
 	`id`	INT NOT NULL AUTO_INCREMENT,
 	`i`			INT NOT NULL,
-	`j`			INT NOT NULL,
+	`k`			INT NOT NULL,
 	`board_id`	INT NOT NULL,
 	CONSTRAINT `PK_Chunk` PRIMARY KEY (`id`)
 );
