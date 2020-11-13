@@ -20,87 +20,95 @@ class Chunk(SO.SQLObject):
 	mines = SO.MultipleJoin('Mine')
 	
 	def generate_mines(self):
+		size = self.board.chunk_size
 		#generate square list
 		squares = set()
 
 		while len(squares)<self.board.chunk_mines:
-			x = random.randrange(self.board.chunk_size)
-			y = random.randrange(self.board.chunk_size)
+			x = random.randrange( size )
+			y = random.randrange( size )
 			squares.add( (x,y) )
 
 		#create mines in the squares
 		for square in squares:
 			Mine( x=square[0], y=square[1], chunk=self )
 	
-	def get_mines_around(self, x, y):
-		counter = 0
-		#check chunk mines
-		for mine in self.mines:
-			if abs(mine.x-x)<=1 and abs(mine.y-y)<=1:
-				if not (mine.x==x and mine.y==y):
-					counter += 1
-		#check left mines
-		if x==0:
-			chunk=self.board.get_chunk( i=self.i-1, k=self.k)
-			for mine in chunk.mines:
-				if mine.x==self.board.chunk_size-1 and abs(mine.y-y)<=1:
-					counter += 1
-		#check right mines
-		if x==self.board.chunk_size-1:
-			chunk=board.get_chunk(i=self.i+1, k=self.k)
-			for mine in chunk.mines:
-				if mine.x==0 and abs(mine.y-y)<=1:
-					counter += 1
-		#check up mines
-		if y==0:
-			chunk=board.get_chunk(i=self.i, k=self.k-1)
-			for mine in chunk.mines:
-				if abs(mine.x-x)<=1 and mine.y==self.board.chunk_size-1:
-					counter += 1
-		#check down mines
-		if y==self.board.chunk_size-1:
-			chunk=board.get_chunk(i=self.i, k=self.k+1)
-			for mine in chunk.mines:
-				if abs(mine.x-x)<=1 and mine.y==0:
-					counter += 1
-		#check left_up mines
-		if x==0 and y==0 :
-			chunk=self.board.get_chunk( i=self.i-1, k=self.k-1)
-			for mine in chunk.mines:
-				if mine.x==self.board.chunk_size-1 and mine.y==self.board.chunk_size-1:
-					counter += 1
-		#check right_up mines
-		if x==self.board.chunk_size-1 and y==0:
-			chunk=board.get_chunk(i=self.i+1, k=self.k-1)
-			for mine in chunk.mines:
-				if mine.x==0 and  mine.y==self.board.chunk_size-1:
-					counter += 1
-		#check left_down mines
-		if x==0 and y==self.board.chunk_size-1:
-			chunk=board.get_chunk(i=self.i-1, k=self.k+1)
-			for mine in chunk.mines:
-				if mine.x==self.board.chunk_size-1 and mine.y==0:
-					counter += 1
-		#check right_down mines
-		if x==self.board.chunk_size-1 and y==self.board.chunk_size-1:
-			chunk=board.get_chunk(i=self.i+1, k=self.k+1)
-			for mine in chunk.mines:
-				if mine.x==0 and mine.y==0:
-					counter += 1
-		return counter
-	
-	def print(self):
+	def get_display(self):
+		size = self.board.chunk_size
+		#generate display grid
 		display=[]
-		for y in range( self.board.chunk_size ):
+		for y in range( size ):
 			display.append([])
-			for x in range( self.board.chunk_size ):
-				display[y].append(self.get_mines_around(x,y))
+			for x in range( size ):
+				display[y].append( {'ismine':False, 'count':0} )
+		#check self mines
 		for mine in self.mines:
-			display[mine.y][mine.x]='█'
-		
-		for x in range( self.board.chunk_size ):
-			for y in range( self.board.chunk_size ):
-				print( display[x][y], end='')
+			display[mine.y][mine.x]['ismine']=True
+			for x in range(mine.x-1 ,mine.x+2):
+				for y in range(mine.y-1 ,mine.y+2):
+					if x>=0 and x<size and y>=0 and y<size:
+						display[y][x]['count'] += 1
+		#check left mines
+		chunk=self.board.get_chunk( i=self.i-1, k=self.k)
+		mines = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == size-1 )
+		for mine in mines:
+			for y in range(mine.y-1 ,mine.y+2):
+				if y>=0 and y<size:
+					display[y][0]['count'] += 1
+		#check right mines
+		chunk=self.board.get_chunk( i=self.i+1, k=self.k)
+		mines = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == 0 )
+		for mine in mines:
+			for y in range(mine.y-1 ,mine.y+2):
+				if y>=0 and y<size:
+					display[y][size-1]['count'] += 1
+		#check up mines
+		chunk=self.board.get_chunk( i=self.i, k=self.k-1)
+		mines = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.y == size-1 )
+		for mine in chunk.mines:
+			for x in range(mine.x-1 ,mine.x+2):
+				if x>=0 and x<size:
+					display[0][x]['count'] += 1
+		#check down mines
+		chunk=self.board.get_chunk( i=self.i, k=self.k+1)
+		mines = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.y == 0 )
+		for mine in chunk.mines:
+			for x in range(mine.x-1 ,mine.x+2):
+				if x>=0 and x<size:
+					display[size-1][x]['count'] += 1
+		#check left_up mines
+		chunk=self.board.get_chunk( i=self.i-1, k=self.k-1 )
+		mine = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == size-1, Mine.q.y == size-1 )
+		print(mine)
+		if mine.count():
+			display[0][0]['count'] += 1
+		#check right_up mines
+		chunk=self.board.get_chunk( i=self.i+1, k=self.k-1 )
+		mine = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == 0, Mine.q.y == size-1 )
+		if mine.count():
+			display[0][size-1]['count'] += 1
+		#check left_down mines
+		chunk=self.board.get_chunk( i=self.i-1, k=self.k+1 )
+		mine = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == size-1, Mine.q.y == 0 )
+		if mine.count():
+			display[0][size-1]['count'] += 1
+		#check right_down mines
+		chunk=self.board.get_chunk( i=self.i+1, k=self.k+1 )
+		mine = Mine.selectBy( Mine.q.chunk == chunk, Mine.q.x == 0, Mine.q.y == 0 )
+		if mine.count():
+			display[size-1][size-1]['count'] += 1
+		return display
+
+	def print(self):
+		size=self.board.chunk_size
+		display = self.get_display()
+
+		for x in range( size ):
+			for y in range( size ):
+				if display[y][x]['ismine']:
+					print('X', end='')
+				else:
+					print(display[y][x]['count'], end='')
 			print()
 
 class Board(SO.SQLObject):
