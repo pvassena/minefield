@@ -65,14 +65,14 @@ class Chunk(SO.SQLObject):
 		#check up mines
 		chunk=self.board.get_chunk( i=self.i, k=self.k-1)
 		mines = Mine.selectBy( chunk = chunk, y = size-1 )
-		for mine in chunk.mines:
+		for mine in mines:
 			for x in range(mine.x-1 ,mine.x+2):
 				if x>=0 and x<size:
 					display[0][x]['count'] += 1
 		#check down mines
 		chunk=self.board.get_chunk( i=self.i, k=self.k+1)
 		mines = Mine.selectBy( chunk = chunk, y = 0 )
-		for mine in chunk.mines:
+		for mine in mines:
 			for x in range(mine.x-1 ,mine.x+2):
 				if x>=0 and x<size:
 					display[size-1][x]['count'] += 1
@@ -102,10 +102,10 @@ class Chunk(SO.SQLObject):
 		size=self.board.chunk_size
 		display = self.get_display()
 
-		for x in range( size ):
-			for y in range( size ):
+		for y in range( size ):
+			for x in range( size ):
 				if display[y][x]['ismine']:
-					print('X', end='')
+					print('\33[1;31mX\33[0m', end='')
 				else:
 					print(display[y][x]['count'], end='')
 			print()
@@ -116,9 +116,9 @@ class Board(SO.SQLObject):
 	chunks = SO.MultipleJoin('Chunk')
 	
 	def get_chunk(self, i, k):
-		for chunk in self.chunks:
-			if chunk.i==i and chunk.k==k:
-				return chunk
+		chunk = Chunk.selectBy( board = board, i = i, k = k )
+		if chunk.count():
+			return chunk.getOne()
 		chunk = Chunk( i=i, k=k, board=self)
 		chunk.generate_mines()
 		return chunk
