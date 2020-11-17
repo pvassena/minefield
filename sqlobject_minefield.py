@@ -90,7 +90,7 @@ class Chunk(SO.SQLObject):
 		chunk=self.board.get_chunk( i=self.i-1, k=self.k+1 )
 		mine = Mine.selectBy( chunk = chunk, x = size-1, y = 0 )
 		if mine.count():
-			display[0][size-1]['count'] += 1
+			display[size-1][0]['count'] += 1
 		#check right_down mines
 		chunk=self.board.get_chunk( i=self.i+1, k=self.k+1 )
 		mine = Mine.selectBy( chunk = chunk, x = 0, y = 0 )
@@ -102,10 +102,10 @@ class Chunk(SO.SQLObject):
 		size=self.board.chunk_size
 		display = self.get_display()
 
-		for x in range( size ):
-			for y in range( size ):
+		for y in range( size ):
+			for x in range( size ):
 				if display[y][x]['ismine']:
-					print('X', end='')
+					print('\33[0;31mX\33[0m', end='')
 				else:
 					print(display[y][x]['count'], end='')
 			print()
@@ -123,10 +123,9 @@ class Board(SO.SQLObject):
 		chunk.generate_mines()
 		return chunk
 
-board = Board( chunk_size=5, chunk_mines=10 )
-chunk = board.get_chunk(0,-1)
-chunk.print()
-chunk = board.get_chunk(0,0)
-chunk.print()
-chunk = board.get_chunk(0,1)
-chunk.print()
+class Action(SO.SQLObject):
+	x = SO.IntCol()
+	y = SO.IntCol()
+	chunk = SO.ForeignKey('Chunk')
+	time = SO.TimestampCol()
+	action = SO.EnumCol(enumValues=['DIG','SWITCH_FLAG'])
