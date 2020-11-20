@@ -40,10 +40,10 @@ class Chunk(SO.SQLObject):
 		for y in range( size ):
 			display.append([])
 			for x in range( size ):
-				display[y].append( {'ismine':False, 'count':0} )
+				display[y].append( {'is_mine':False, 'count':0, 'is_hidden':True} )
 		#check self mines
 		for mine in self.mines:
-			display[mine.y][mine.x]['ismine']=True
+			display[mine.y][mine.x]['is_mine']=True
 			for x in range(mine.x-1 ,mine.x+2):
 				for y in range(mine.y-1 ,mine.y+2):
 					if x>=0 and x<size and y>=0 and y<size:
@@ -97,18 +97,6 @@ class Chunk(SO.SQLObject):
 		if mine.count():
 			display[size-1][size-1]['count'] += 1
 		return display
-
-	def print(self):
-		size=self.board.chunk_size
-		display = self.get_display()
-
-		for y in range( size ):
-			for x in range( size ):
-				if display[y][x]['ismine']:
-					print('\33[0;31mX\33[0m', end='')
-				else:
-					print(display[y][x]['count'], end='')
-			print()
 
 class Board(SO.SQLObject):
 	chunk_size = SO.IntCol()
