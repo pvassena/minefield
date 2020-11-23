@@ -47,6 +47,7 @@ CREATE TABLE `action`
 	`chunk_id`	INT NOT NULL,
 	`x`			INT NOT NULL,
 	`y`			INT NOT NULL,
+	`time`			DATETIME,
 	`action`	ENUM ('DIG','SWITCH_FLAG') NOT NULL,
 	CONSTRAINT `PK_Action` PRIMARY KEY (`id`)
 );

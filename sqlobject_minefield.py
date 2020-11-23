@@ -40,7 +40,7 @@ class Chunk(SO.SQLObject):
 		for y in range( size ):
 			display.append([])
 			for x in range( size ):
-				display[y].append( {'is_mine':False, 'count':0, 'is_hidden':True} )
+				display[y].append( {'is_mine':False, 'count':0, 'is_hidden':True, 'flag':False} )
 		#check self mines
 		for mine in self.mines:
 			display[mine.y][mine.x]['is_mine']=True
@@ -96,6 +96,13 @@ class Chunk(SO.SQLObject):
 		mine = Mine.selectBy( chunk = chunk, x = 0, y = 0 )
 		if mine.count():
 			display[size-1][size-1]['count'] += 1
+		#set non hidden mines
+		actions = Action.selectBy( chunk=self )
+		for action in actions:
+			if action.action == 'DIG':
+				display[action.y][action.x]['is_hidden']=False
+			else:
+				display[action.y][action.x]['flag'] = not display[action.y][action.x]['flag']
 		return display
 
 class Board(SO.SQLObject):
