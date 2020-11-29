@@ -105,13 +105,6 @@ class Chunk(SO.SQLObject):
 			else:
 				display[action.y][action.x]['flag'] = not display[action.y][action.x]['flag']
 		return display
-	
-	def dig_around(self, x, y):
-		size = self.board.chunk_size
-		for x1 in range(x-1,x+2):
-			for y1 in range(y-1,y+2):
-				if x1>=0 and x1<size and y1>=0 and y1<size and (x1!=x or y1!=y):
-					Action( action='DIG', x=x1, y=y1, chunk=self, time=datetime.datetime.now() )
 
 class Board(SO.SQLObject):
 	chunk_size = SO.IntCol()

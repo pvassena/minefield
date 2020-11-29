@@ -8,7 +8,8 @@ arrow_keys = {
 	PG.K_UP : 'UP',
 	PG.K_DOWN : 'DOWN',
 	PG.K_LEFT : 'LEFT',
-	PG.K_RIGHT : 'RIGHT'
+	PG.K_RIGHT : 'RIGHT',
+	PG.K_SPACE : 'RESET'
 }
 
 class Game():
@@ -29,6 +30,9 @@ class Game():
 			self.current_k -= 1
 		elif direction == 'DOWN':
 			self.current_k += 1
+		elif direction == 'RESET':
+			self.current_i = 0
+			self.current_k = 0
 		else:
 			print("invalid direction")
 			quit()
@@ -44,14 +48,31 @@ class Game():
 				)
 
 	def dig_square(self, x, y):
-		Action( chunk = self.chunk,
-				x = x,
-				y = y,
-				action = 'DIG',
-				time = datetime.datetime.now() )
+		if not Action.selectBy(chunk=self.chunk, x=x, y=y, action='DIG').count():
+			Action( chunk = self.chunk,
+					x = x,
+					y = y,
+					action = 'DIG',
+					time = datetime.datetime.now() )
+			display = self.chunk.get_display()
+			if display[y][x]['count'] == 0:
+				for y1 in range(y-1, y+2):
+					for x1 in range(x-1, x+2):
+						if not (x1 == x and y1 == y):
+							if x1>=0 and x1<self.board.chunk_size:
+								if y1>=0 and y1<self.board.chunk_size:
+									self.dig_square(x1, y1)
 	
 	def get_display(self):
-		pass
+		display = []
+		for k in range(-1, 2):
+			row = []
+			for i in range(-1, 2):
+				chunk = game.board.get_chunk(	i = i + self.current_i,
+												k = k + self.current_k )
+				row.append( chunk.get_display() )
+			display.append( row )
+		return display
 
 class Render():
 
@@ -70,8 +91,8 @@ class Render():
 		self.size = size
 		
 		#get a display
-		self.screen = PG.display.set_mode( (self.tile*(self.size*3),
-											self.tile*(self.size*3)) )
+		self.screen = PG.display.set_mode( (self.tile*(self.size+2*self.border),
+											self.tile*(self.size+2*self.border)) )
 		
 		#set display title
 		PG.display.set_caption('MineField')
@@ -79,43 +100,60 @@ class Render():
 		#get a font
 		self.font = PG.font.Font( PG.font.get_default_font(), 30) 
 		
-		#create a list of possible cell types
-		printable = [str(i) for i in range(9)]
-		printable.append('X')
-		printable.append('Δ')
-		
 		#create a dictionary of blittable cell types
 		self.cell = dict()
-		for char in printable:
-			
-			#create blittable surface
-			surf = PG.Surface( (self.tile, self.tile) )
-			rect_surf = surf.get_rect()
+		
+		#add empty cero
+		self.cell[0] = self.blittable( '', (0, 0, 0) )
 
-			#draw gray rectangle to surface
-			PG.draw.rect(	surface = surf,
-							color = (100, 100, 100), #gray
-							rect = rect_surf,
-							width = 1,
-							border_radius = 7)
-
-			#render text
-			text = self.font.render(	char,			#text
-										False,			#antialias
-										(200, 200, 0) ) #color = yellow
-			
-			#center text in surface
-			rect_text = text.get_rect()
-			rect_text.centerx = rect_surf.centerx
-			rect_text.centery = rect_surf.centery
-
-			#blit text to surface
-			surf.blit(	source = text,
-						dest = rect_text )
-			
-			#add surface to dictionary
-			self.cell[char] = surf
+		#add yellow numbers
+		for i in range(1,9):
+			self.cell[i] = self.blittable( i, (200, 200, 0) )
+		
+		#add red X
+		self.cell['X'] = self.blittable( 'X', (255, 0, 0) )
+		
+		#add green delta
+		self.cell['Δ'] = self.blittable( 'Δ', (0, 255, 0) )
 	
+	def blittable(self, char, color):
+
+		#create blittable surface
+		surf = PG.Surface( (self.tile, self.tile) )
+		rect_surf = surf.get_rect()
+
+		#draw gray rectangle to surface
+		PG.draw.rect(	surface = surf,
+						color = (100, 100, 100), #gray
+						rect = rect_surf,
+						width = 1,
+						border_radius = 7)
+
+		#render text (this function doesn't accept named parameters)
+		text = self.font.render(	str(char),		#text
+									False,			#antialias
+									color )			#color
+		
+		#center text in surface
+		rect_text = text.get_rect()
+		rect_text.centerx = rect_surf.centerx
+		rect_text.centery = rect_surf.centery
+
+		#blit text to surface
+		surf.blit(	source = text,
+					dest = rect_text )
+		
+		return surf
+
+	def draw_cell(self, square, x_pos, y_pos ):
+		if square['is_hidden'] == True:
+			if square['flag'] == True:
+				self.screen.blit( self.cell['Δ'], (x_pos, y_pos) )
+		elif square['is_mine'] == True:
+			self.screen.blit( self.cell['X'], (x_pos, y_pos) )
+		else:
+			self.screen.blit( self.cell[square['count']], (x_pos, y_pos) )
+
 	def render_screen(self, i_actual, k_actual):
 		self.screen.fill( (0, 0, 0) )
 		for i in range(-1, +2):
@@ -124,17 +162,12 @@ class Render():
 				display = chunk.get_display()
 				for x in range( self.size ):
 					for y in range( self.size ):
-						if display[y][x]['is_hidden']==True:
-							if display[y][x]['flag']==True:
-								self.screen.blit( self.cell['Δ'], ( self.tile*(x+self.size*(i+1)), self.tile*(y+self.size*(k+1)) ) )
-						elif display[y][x]['is_mine']==True:
-							self.screen.blit( self.cell['X'],  ( self.tile*(x+self.size*(i+1)), self.tile*(y+self.size*(k+1)) ) )
-						else:
-							count = display[y][x]['count']
-								
-							self.screen.blit( self.cell[str(count)], (x*self.tile+self.tile*self.size*(i+1), y*self.tile+self.tile*self.size*(k+1)) )
-						
-		rect = PG.Rect ((self.tile*self.size-1,self.tile*self.size-1),
+						self.draw_cell( square = display[y][x],
+										x_pos = self.tile*(x+self.size*i+self.border),
+										y_pos = self.tile*(y+self.size*k+self.border))
+
+
+		rect = PG.Rect ((self.tile*self.border-1,self.tile*self.border-1),
 						(self.tile*self.size+2,self.tile*self.size+2))
 		PG.draw.rect(   surface=self.screen,
 						color = (255,0,0),
@@ -157,13 +190,14 @@ while 1:
 			quit()
 
 		if event.type == PG.MOUSEBUTTONUP:
-			if event.pos[0]//render.tile//render.size == 1 and event.pos[1]//render.tile//render.size == 1:	
-				x = (event.pos[0]//render.tile)%render.size
-				y = (event.pos[1]//render.tile)%render.size
-				if event.button == 1:
-					game.dig_square( x=x, y=y )
-				elif event.button == 3:
-					game.switch_flag( x=x, y=y )
+			x = (event.pos[0]//render.tile)-render.border
+			y = (event.pos[1]//render.tile)-render.border
+			if x>=0 and x<render.size:
+				if y>=0 and y < render.size:
+					if event.button == 1:
+						game.dig_square( x=x, y=y )
+					elif event.button == 3:
+						game.switch_flag( x=x, y=y )
 
 		if event.type == PG.KEYDOWN:
 			if event.key in arrow_keys:
