@@ -112,9 +112,9 @@ class Board(SO.SQLObject):
 	chunks = SO.MultipleJoin('Chunk')
 	
 	def get_chunk(self, i, k):
-		for chunk in self.chunks:
-			if chunk.i==i and chunk.k==k:
-				return chunk
+		chunk = Chunk.selectBy( i=i, k=k, board=self)
+		if chunk.count():
+			return chunk.getOne()
 		chunk = Chunk( i=i, k=k, board=self)
 		chunk.generate_mines()
 		return chunk
