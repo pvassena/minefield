@@ -2,14 +2,18 @@
 
 from sqlobject_minefield import *
 import datetime
+from render import *
+import time
 
 class Game():
 
-	def __init__(self):
+	def __init__(self, board=None):
 		self.current_i = 0
 		self.current_k = 0
-		self.board = Board( chunk_size=8 , chunk_mines=13 )
-		print("board id: ",self.board.id)
+		if board == None:
+			self.board = Board( chunk_size=8 , chunk_mines=13 )
+		else:
+			self.board = board
 		self.chunk = self.board.get_chunk(	i = self.current_i,
 											k = self.current_k )
 
@@ -55,13 +59,35 @@ class Game():
 								if y1>=0 and y1<self.board.chunk_size:
 									self.dig_square(x1, y1)
 	
-	def get_display(self):
-		display = []
+	def get_displays(self, max_action):
+		displays = []
 		for k in range(-1, 2):
 			row = []
 			for i in range(-1, 2):
-				chunk = game.board.get_chunk(	i = i + self.current_i,
+				chunk = self.board.get_chunk(	i = i + self.current_i,
 												k = k + self.current_k )
-				row.append( chunk.get_display() )
-			display.append( row )
-		return display
+				display = chunk.get_display()
+				display = chunk.update_display(display, max_action)
+				row.append( display )
+			displays.append( row )
+		return displays
+
+	def repetition(self):
+		render = Render(self.board.chunk_size)
+		actions = Action.select(SO.AND(Chunk.q.board==self.board, Action.j.chunk))
+		for action in actions:
+			while action.chunk.i != self.current_i or action.chunk.k != self.current_k:
+				if action.chunk.i < self.current_i:
+					self.change_chunk('LEFT')
+				elif action.chunk.i > self.current_i:
+					self.change_chunk('RIGHT')
+				elif action.chunk.k < self.current_k:
+					self.change_chunk('UP')
+				elif action.chunk.k > self.current_k:
+					self.change_chunk('DOWN')
+				time.sleep(0.25)
+				
+			render.render_screen( self.get_displays(action.id) )			
+			time.sleep(0.5)
+		
+		

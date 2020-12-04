@@ -97,8 +97,12 @@ class Chunk(SO.SQLObject):
 		mine = Mine.selectBy( chunk = chunk, x = 0, y = 0 )
 		if mine.count():
 			display[size-1][size-1]['count'] += 1
+		#return display
+		return display
+
+	def update_display(self, display, max_action):
 		#set non hidden mines
-		actions = Action.selectBy( chunk=self )
+		actions = Action.select(SO.AND(Action.q.chunk==self, Action.q.id<=max_action))
 		for action in actions:
 			if action.action == 'DIG':
 				display[action.y][action.x]['is_hidden']=False
