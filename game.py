@@ -83,5 +83,17 @@ class Game():
 										Action.j.chunk,
 										Mine.j.chunk,
 										Action.q.x == Mine.q.x,
-										Action.q.y == Mine.q.y))
+										Action.q.y == Mine.q.y,
+										Action.q.action == 'DIG'))
 		return action.count()
+
+	def count_flags(self):
+		actions = Action.selectBy(chunk=self.chunk, action='SWITCH_FLAG')
+		lista = list()
+		for action in actions:
+			pos = (action.x, action.y)
+			if pos in lista:
+				lista.remove(pos)
+			else:
+				lista.append(pos)
+		return len(lista)

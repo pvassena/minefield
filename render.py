@@ -20,14 +20,15 @@ class Render():
 		
 		#get a display
 		self.screen = PG.display.set_mode( (self.tile*(self.size+2*self.border),
-											self.tile*(self.size+2*self.border)) )
+											self.tile*(self.size+2*self.border+1)) )
 		
 		#set display title
 		PG.display.set_caption('MineField')
 		
 		#get a font
 		self.font = PG.font.Font( PG.font.get_default_font(), 30) 
-		
+		self.fontbig = PG.font.Font( PG.font.get_default_font(), 60)
+
 		#create a dictionary of blittable cell types
 		self.cell = dict()
 		
@@ -82,7 +83,7 @@ class Render():
 		else:
 			self.screen.blit( self.cell[square['count']], (x_pos, y_pos) )
 
-	def render_screen(self, displays):
+	def render_screen(self, displays, board, score, mines):
 		self.screen.fill( (0, 0, 0) )
 		k=-1
 		for row in displays:
@@ -96,7 +97,7 @@ class Render():
 				i += 1
 			k += 1
 
-
+		#red chunk indicator
 		rect = PG.Rect ((self.tile*self.border-1,self.tile*self.border-1),
 						(self.tile*self.size+2,self.tile*self.size+2))
 		PG.draw.rect(   surface=self.screen,
@@ -104,6 +105,48 @@ class Render():
 						rect = rect,
 						width = 1,
 						border_radius = 8)
+		
+		#background for text
+		rect = PG.Rect ((0,self.tile*(self.size+2*self.border)),
+						(self.tile*(self.size+2*self.border),self.tile))
+		PG.draw.rect(   surface=self.screen,
+						color = (200,0,200),
+						rect = rect,
+						border_radius = 5)
+		
+		#render text (this function doesn't accept named parameters)
+		text = self.font.render(	'Id: '+str(board)+'   * '+str(score)+' *   Δ: '+str(mines),		#text
+									False,				#antialias
+									(255, 255, 0) )		#color
+		
+		#center text in surface
+		rect_text = text.get_rect()
+		rect_text.centerx = rect.centerx
+		rect_text.centery = rect.centery
+
+		#blit text to surface
+		self.screen.blit(	source = text,
+							dest = rect_text )
+
+
+		PG.display.flip()
+
+	def render_gameover(self):
+		#render text (this function doesn't accept named parameters)
+		text = self.fontbig.render(	'Game Over',		#text
+									False,				#antialias
+									(255, 0, 0),
+									(0,0,0))		#color
+		
+		#center text in surface
+		rect_text = text.get_rect()
+		rect_surf = self.screen.get_rect()
+		rect_text.centerx = rect_surf.centerx
+		rect_text.centery = rect_surf.centery
+
+		#blit text to surface
+		self.screen.blit(	source = text,
+							dest = rect_text )
 		PG.display.flip()
 
 	def get_square(self, position):

@@ -46,3 +46,4 @@ for action in actions:
 				at_exit(game)
 	
 	time.sleep(0.1)
+time.sleep(1)
