@@ -13,7 +13,7 @@ class Game():
 		if board == None:
 			self.board = Board( chunk_size=8 , chunk_mines=13 )
 		else:
-			self.board = board
+			self.board = Board.select(Board.q.id == board).getOne()
 		self.chunk = self.board.get_chunk(	i = self.current_i,
 											k = self.current_k )
 
@@ -72,22 +72,16 @@ class Game():
 			displays.append( row )
 		return displays
 
-	def repetition(self):
-		render = Render(self.board.chunk_size)
-		actions = Action.select(SO.AND(Chunk.q.board==self.board, Action.j.chunk))
-		for action in actions:
-			while action.chunk.i != self.current_i or action.chunk.k != self.current_k:
-				if action.chunk.i < self.current_i:
-					self.change_chunk('LEFT')
-				elif action.chunk.i > self.current_i:
-					self.change_chunk('RIGHT')
-				elif action.chunk.k < self.current_k:
-					self.change_chunk('UP')
-				elif action.chunk.k > self.current_k:
-					self.change_chunk('DOWN')
-				time.sleep(0.25)
-				
-			render.render_screen( self.get_displays(action.id) )			
-			time.sleep(0.5)
-		
-		
+	def get_score(self):
+		score = Action.select(SO.AND(	Chunk.q.board==self.board,
+										Action.j.chunk,
+										Action.q.action=='DIG'))
+		return score.count()
+
+	def get_gameover(self):
+		action = Action.select(SO.AND(	Chunk.q.board==self.board,
+										Action.j.chunk,
+										Mine.j.chunk,
+										Action.q.x == Mine.q.x,
+										Action.q.y == Mine.q.y))
+		return action.count()

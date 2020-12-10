@@ -13,7 +13,7 @@ class Render():
 		self.tile = 40
 		
 		#set border dimension
-		self.border = 2
+		self.border = 3
 
 		#set board size
 		self.size = size
@@ -105,3 +105,12 @@ class Render():
 						width = 1,
 						border_radius = 8)
 		PG.display.flip()
+
+	def get_square(self, position):
+		x = (position[0]//self.tile)-self.border
+		y = (position[1]//self.tile)-self.border
+		if x>=0 and x<self.size:
+			if y>=0 and y<self.size:
+				return (x,y)
+		else:
+			return None
